@@ -61,7 +61,7 @@ NSRecursiveLock *resultLock = [NSRecursiveLock alloc];
 
 /**
  * Overload the presenting of the UI so we can pause the Unity player.
- */
+
 - (void)signIn:(GIDSignIn *)signIn
     presentViewController:(UIViewController *)viewController {
   UnityPause(true);
@@ -69,16 +69,16 @@ NSRecursiveLock *resultLock = [NSRecursiveLock alloc];
                                            animated:YES
                                          completion:nil];
 }
-
+ */
 /**
  * Overload the dismissing so we can resume the Unity player.
- */
+
 - (void)signIn:(GIDSignIn *)signIn
     dismissViewController:(UIViewController *)viewController {
   UnityPause(false);
   [UnityGetGLViewController() dismissViewControllerAnimated:YES completion:nil];
 }
-
+ */
 /**
  * The sign-in flow has finished and was successful if |error| is |nil|.
  * Map the errors from the iOS SDK back to the Android values for consistency's
@@ -105,9 +105,9 @@ NSRecursiveLock *resultLock = [NSRecursiveLock alloc];
       case kGIDSignInErrorCodeKeychain:
         currentResult_->result_code = kStatusCodeInternalError;
         break;
-      case kGIDSignInErrorCodeNoSignInHandlersInstalled:
-        currentResult_->result_code = kStatusCodeDeveloperError;
-        break;
+      //case kGIDSignInErrorCodeNoSignInHandlersInstalled:
+        //currentResult_->result_code = kStatusCodeDeveloperError;
+        //break;
       case kGIDSignInErrorCodeHasNoAuthInKeychain:
         currentResult_->result_code = kStatusCodeError;
         break;
@@ -191,7 +191,7 @@ bool GoogleSignIn_Configure(void *unused, bool useGameSignIn,
     [GIDSignIn sharedInstance].loginHint =
         [NSString stringWithUTF8String:accountName];
   }
-
+  [GIDSignIn sharedInstance].presentingViewController = UnityGetGLViewController();
   return !useGameSignIn;
 }
 
@@ -239,7 +239,7 @@ void *GoogleSignIn_SignIn() {
 void *GoogleSignIn_SignInSilently() {
   SignInResult *result = startSignIn();
   if (!result) {
-    [[GIDSignIn sharedInstance] signInSilently];
+    [[GIDSignIn sharedInstance] restorePreviousSignIn];
     result = currentResult_.get();
   }
   return result;
@@ -292,12 +292,12 @@ void GoogleSignIn_DisposeFuture(SignInResult *result) {
  * then len is returned. Otherwise returns length of the string to copy + 1.
  */
 static size_t CopyNSString(NSString *src, char *dest, size_t len) {
+    const char *string = src? [src UTF8String]:"";
   if (dest && src && len) {
-    const char *string = [src UTF8String];
     strncpy(dest, string, len);
     return len;
   }
-  return src ? src.length + 1 : 0;
+  return src ? strlen(string) + 1 : 0;
 }
 
 size_t GoogleSignIn_GetServerAuthCode(GIDGoogleUser *guser, char *buf,
